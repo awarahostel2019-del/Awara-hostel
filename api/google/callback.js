@@ -26,7 +26,8 @@ module.exports = async function handler(req, res) {
     if (!tokens.refresh_token) throw new Error("Google did not return a refresh token. Restart the connection and approve offline access.");
     const encrypted = encryptRefreshToken(tokens.refresh_token);
     return res.status(200).send(page("Google connection ready", "The connection token has been encrypted. Copy only the encrypted value into the Vercel environment variable named GBP_REFRESH_TOKEN_ENC. Never put the plain refresh token in source code.", encrypted));
-  } catch {
+  } catch (error) {
+    console.error("[google-oauth-callback]", error && error.message ? error.message : "unknown error");
     return res.status(500).send(page("Connection could not be completed", "Check the Google client settings and try the connection again. No token was saved."));
   }
 };

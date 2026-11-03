@@ -1,0 +1,28 @@
+# Awara Hostels & Dormitory
+
+> Public information about dormitory accommodation in Chowk, Lucknow, near KGMU.
+
+- Website: https://awarahostels.com/
+- About: https://awarahostels.com/about.html
+- Contact: https://awarahostels.com/contact.html
+- Booking and stay information: https://awarahostels.com/terms.html
+- Human-readable Markdown: https://awarahostels.com/awara-hostels.md
+- Read-only MCP endpoint: https://awarahostels.com/api/mcp
+
+## Final discounted tariffs
+- Hall Dormitory: ₹299 per bed / night
+- 4-Bed Dormitory: ₹350 per bed / night
+- 8-Bed Mixed Dormitory: ₹399 per bed / night
+- 1BHK Cooler Room: ₹999 per room / night
+- 1BHK AC Room: ₹1,500 per room / night
+- 2BHK Entire Room: ₹2,999 per room / night; prior confirmation required
+
+## Important booking note
+A booking request is not a reservation. Guests must confirm availability, any applicable taxes, payment method and cancellation terms with Awara. The website does not take online payment.
+
+## Contact
+Phone: +91 522 4738695  
+WhatsApp: +91 89330 13188  
+Email: awarahostel2019@email.com
+
+Address: 2nd Floor, Akbar Mansion, Opp. Mazar, Imambara Agha Baqar, Chowk, Lucknow 226003, Uttar Pradesh, India.

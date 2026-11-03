@@ -1,4 +1,7 @@
 {
+  "crons": [
+    { "path": "/api/google/auto-reply", "schedule": "0 3 * * *" }
+  ],
   "rewrites": [
     {
       "source": "/",

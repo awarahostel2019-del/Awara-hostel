@@ -6,6 +6,7 @@
 - About: https://awarahostels.com/about.html
 - Contact: https://awarahostels.com/contact.html
 - Booking and stay information: https://awarahostels.com/terms.html
+- Privacy policy: https://awarahostels.com/privacy.html
 - Human-readable Markdown: https://awarahostels.com/awara-hostels.md
 - Read-only MCP endpoint: https://awarahostels.com/api/mcp
 

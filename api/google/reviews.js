@@ -19,7 +19,8 @@ module.exports = async function handler(req, res) {
         reply: review.reviewReply && review.reviewReply.comment ? review.reviewReply.comment : "",
       })),
     });
-  } catch {
+  } catch (error) {
+    console.error("[google-reviews]", error && error.message ? error.message : "unknown error");
     res.setHeader("Cache-Control", "no-store");
     return res.status(503).json({ error: "Google reviews are temporarily unavailable." });
   }

@@ -19,7 +19,7 @@ Awara Hostels & Dormitory offers dormitory accommodation in Chowk, Old Lucknow, 
 | 8-Bed Mixed Dormitory | ₹399 per bed / night |
 | 1BHK Cooler Room | ₹999 per room / night |
 | 1BHK AC Room | ₹1,500 per room / night |
-| 2BHK Entire Room | ₹2,999 per room / night; prior confirmation required |
+| 2BHK Entire Room | ₹2,999 per night for up to 5 guests; ₹3,500 for 6–8 guests (maximum 8); prior confirmation required |
 
 Confirm availability and any applicable taxes directly with Awara. A booking request is not a reservation.
 
@@ -35,7 +35,7 @@ Confirm availability and any applicable taxes directly with Awara. A booking req
 
 ## Booking
 
-A website request does not reserve a bed. Awara must confirm availability before a booking is final. Prior confirmation is required for 2BHK bookings. This website does not take online payment. Ask about payment method, any applicable taxes, advance amount, check-in/check-out time, cancellation and refund terms before confirming.
+A website request does not reserve a bed. Awara must confirm availability before a booking is final. The 2BHK can be booked only when both 1BHK rooms are vacant and requires prior confirmation. This website does not take online payment. Ask about payment method, any applicable taxes, advance amount, check-in/check-out time, cancellation and refund terms before confirming.
 
 ## More information
 

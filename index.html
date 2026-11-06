@@ -220,29 +220,30 @@ footer{padding:28px 0;text-align:center;font:14px "Trebuchet MS",Arial,sans-seri
 <section id="book">
   <div class="wrap">
     <h2>Book your bed</h2>
-        <p class="sub">For dormitory beds, share your dates and number of beds. This sends a request only; we’ll confirm availability and the final rate with you directly. For private rooms or 2BHK confirmation, call or WhatsApp us. No online payment is taken.</p>
+        <p class="sub">Choose a dorm bed or private room, then share your dates. This prepares a request for you to send by WhatsApp or email; it does not reserve a stay or take payment. Awara will confirm availability and any applicable taxes. 2BHK bookings need prior confirmation.</p>
     <div class="book">
       <div class="card">
         <form id="bf" class="bf" novalidate>
           <label>Check-in<input type="date" id="ci" required></label>
           <label>Check-out<input type="date" id="co" required></label>
-          <label>Dorm<select id="dorm"><option>Boys dorm</option><option>Girls dorm</option></select></label>
-          <label>Number of beds (max 14)<input type="number" id="beds" min="1" max="14" value="1" required></label>
+          <label class="full">Accommodation<select id="stayType"><option value="hall">Hall Dormitory · ₹299 per bed/night</option><option value="fourBed">4-Bed Dormitory · ₹350 per bed/night</option><option value="eightBed">8-Bed Mixed Dormitory · ₹399 per bed/night</option><option value="cooler">1BHK Cooler Room · ₹999 per room/night</option><option value="ac">1BHK AC Room · ₹1,500 per room/night</option><option value="twoBhk">2BHK Entire Room · ₹2,999 per room/night (prior confirmation)</option></select></label>
+          <label id="dorm-field">Dorm area preference<select id="dorm"><option>Boys dorm</option><option>Girls dorm</option></select></label>
+          <label id="beds-field"><span id="qty-title">Number of beds (max 14)</span><input type="number" id="beds" min="1" max="14" value="1" required></label>
           <label>Your name<input type="text" id="nm" autocomplete="name" placeholder="Full name"></label>
           <label>Phone / WhatsApp<input type="tel" id="ph" autocomplete="tel" placeholder="10-digit mobile number"></label>
           <label class="full">Note (optional)<textarea id="nt" rows="2" placeholder="Arrival time, patient or student stay, special request"></textarea></label>
-          <div class="full"><button class="btn p" type="submit" style="cursor:pointer">Request booking</button><p class="err" id="err" role="alert"></p></div>
+          <div class="full"><button class="btn p" type="submit" style="cursor:pointer">Prepare booking request</button><p class="err" id="err" role="alert"></p><p class="note">Nothing is sent until you choose WhatsApp or email. See our <a href="privacy.html">Privacy policy</a>.</p></div>
         </form>
       </div>
       <div class="card sum">
         <h3>Your stay</h3>
         <dl id="sm">
           <div><dt>Nights</dt><dd id="sn">–</dd></div>
-          <div><dt>Beds</dt><dd id="sb">1</dd></div>
-          <div><dt>Rate per bed / night</dt><dd id="sr">Confirm with us</dd></div>
-          <div class="tot"><dt>Final total</dt><dd id="st">Confirm with us</dd></div>
+          <div><dt id="quantity-title">Beds</dt><dd id="sb">1</dd></div>
+          <div><dt>Rate</dt><dd id="sr">₹299 per bed / night</dd></div>
+          <div class="tot"><dt>Estimated total</dt><dd id="st">₹299</dd></div>
         </dl>
-        <p class="note">Your request does not reserve a bed. We’ll confirm availability and the total before your booking is final.</p>
+        <p class="note" id="booking-note">Estimate uses the listed final tariff before any applicable taxes. Your request does not reserve a bed; we’ll confirm availability and the total before the booking is final.</p>
         <div id="ok" class="hidden">
           <h3>Request ready</h3>
           <div class="ref" id="rf"></div>
@@ -297,22 +298,28 @@ footer{padding:28px 0;text-align:center;font:14px "Trebuchet MS",Arial,sans-seri
 (function(){
   var WHATSAPP='918933013188', EMAIL='awarahostel2019@email.com';
   var $=function(i){return document.getElementById(i)};
-  var ci=$('ci'),co=$('co'),beds=$('beds');
+  var ci=$('ci'),co=$('co'),beds=$('beds'),stayType=$('stayType');
+  var rates={hall:299,fourBed:350,eightBed:399,cooler:999,ac:1500,twoBhk:2999};
+  var accommodationNames={hall:'Hall Dormitory',fourBed:'4-Bed Dormitory',eightBed:'8-Bed Mixed Dormitory',cooler:'1BHK Cooler Room',ac:'1BHK AC Room',twoBhk:'2BHK Entire Room'};
   function iso(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
   function parse(v){var p=v.split('-');return v?Date.UTC(+p[0],+p[1]-1,+p[2]):NaN}
   function nights(){var n=(parse(co.value)-parse(ci.value))/864e5;return n>0?n:0}
   function show(v){var p=v.split('-');return p[2]+'/'+p[1]+'/'+p[0]}
   function inr(n){return '₹'+n.toLocaleString('en-IN')}
+  function isDorm(){return stayType.value==='hall'||stayType.value==='fourBed'||stayType.value==='eightBed'}
   var t=new Date(),today=iso(t);
   ci.min=today;co.min=today;ci.value=today;
   var tm=new Date(t.getTime()+864e5);co.value=iso(tm);
   function update(){
     if(ci.value){var d=new Date(parse(ci.value)+864e5);var m=d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0');co.min=m;}
-    var n=nights(),b=Math.max(1,parseInt(beds.value,10)||1);
-    $('sn').textContent=n||'–';$('sb').textContent=b;
-    $('st').textContent='Confirm with us';
+    var dorm=isDorm(),n=nights(),b=dorm?Math.max(1,parseInt(beds.value,10)||1):1,rate=rates[stayType.value]||0,unit=dorm?'bed':'room';
+    $('dorm-field').classList.toggle('hidden',!dorm);$('beds-field').classList.toggle('hidden',!dorm);
+    $('quantity-title').textContent=dorm?'Beds':'Rooms';$('sb').textContent=b;
+    $('sr').textContent=inr(rate)+' per '+unit+' / night';$('sn').textContent=n||'–';
+    $('st').textContent=n?inr(rate*b*n):'Choose dates';
+    $('booking-note').textContent=(stayType.value==='twoBhk'?'2BHK bookings need prior confirmation. ':'')+'Estimate uses the listed final tariff before any applicable taxes. Your request does not reserve a stay; we’ll confirm availability and the total before the booking is final.';
   }
-  ['input','change'].forEach(function(e){ci.addEventListener(e,update);co.addEventListener(e,update);beds.addEventListener(e,update)});
+  ['input','change'].forEach(function(e){ci.addEventListener(e,update);co.addEventListener(e,update);beds.addEventListener(e,update);stayType.addEventListener(e,update)});
   update();
   var msg='';
   $('bf').addEventListener('submit',function(e){
@@ -321,12 +328,13 @@ footer{padding:28px 0;text-align:center;font:14px "Trebuchet MS",Arial,sans-seri
     var n=nights(),b=parseInt(beds.value,10)||0,nm=$('nm').value.trim(),ph=$('ph').value.replace(/\D/g,'');
     if(!ci.value||!co.value||n<1){err.textContent='Please choose a check-out date after the check-in date.';return}
     if(parse(ci.value)<parse(today)){err.textContent='Check-in cannot be in the past.';return}
-    if(b<1||b>14){err.textContent='Please enter between 1 and 14 beds.';return}
+    if(isDorm()&&(b<1||b>14)){err.textContent='Please enter between 1 and 14 beds.';return}
     if(nm.length<2){err.textContent='Please enter your name.';return}
     if(ph.length<10){err.textContent='Please enter a valid phone number.';return}
     var ref='AWR-'+today.slice(2).replace(/-/g,'')+'-'+Math.random().toString(36).slice(2,6).toUpperCase();
     var note=$('nt').value.trim();
-    msg='Booking availability request '+ref+'\nAwara Hostels & Dormitory\n\nName: '+nm+'\nPhone: '+$('ph').value.trim()+'\nDorm: '+$('dorm').value+'\nBeds: '+b+'\nCheck-in: '+show(ci.value)+'\nCheck-out: '+show(co.value)+'\nNights: '+n+'\nRate and availability: Please confirm'+(note?'\nNote: '+note:'');
+    var rate=rates[stayType.value]||0,unit=isDorm()?'bed':'room',quantity=isDorm()?b:1;
+    msg='Booking availability request '+ref+'\nAwara Hostels & Dormitory\n\nName: '+nm+'\nPhone: '+$('ph').value.trim()+'\nAccommodation: '+accommodationNames[stayType.value]+'\n'+(isDorm()?'Dorm area preference: '+$('dorm').value+'\nBeds: '+quantity:'Rooms: 1')+'\nCheck-in: '+show(ci.value)+'\nCheck-out: '+show(co.value)+'\nNights: '+n+'\nListed rate: '+inr(rate)+' per '+unit+' / night\nEstimated total before applicable taxes: '+inr(rate*quantity*n)+'\n'+(stayType.value==='twoBhk'?'Prior confirmation required for 2BHK. ':'')+'Please confirm availability and final total.'+(note?'\nNote: '+note:'');
     $('rf').textContent=ref;$('dt').textContent=msg.split('\n').slice(3).join('\n');
     var q=encodeURIComponent(msg);
     $('em').href='mailto:'+EMAIL+'?subject='+encodeURIComponent('Booking request '+ref)+'&body='+q;
@@ -357,8 +365,9 @@ document.addEventListener('keydown',function(e){if(!lb.classList.contains('hidde
   if(!root)return;
   function showMessage(message){root.textContent='';var p=document.createElement('p');p.className='note';p.textContent=message;root.appendChild(p)}
   function stars(rating){var n={ONE:1,TWO:2,THREE:3,FOUR:4,FIVE:5}[rating]||0;return '★'.repeat(n)+'☆'.repeat(5-n)}
+  var controller=new AbortController(),timeout=setTimeout(function(){controller.abort()},8000);
   try{
-    var response=await fetch('/api/google/reviews',{headers:{Accept:'application/json'}});
+    var response=await fetch('/api/google/reviews',{headers:{Accept:'application/json'},signal:controller.signal});
     if(!response.ok)throw new Error('Unavailable');
     var data=await response.json();
     if(!data.reviews||!data.reviews.length){showMessage('No recent Google reviews are available to display.');return}
@@ -372,7 +381,8 @@ document.addEventListener('keydown',function(e){if(!lb.classList.contains('hidde
       if(review.reply){var reply=document.createElement('p');reply.className='owner-reply';reply.textContent='Awara Hostels replied: '+review.reply;card.appendChild(reply)}
       root.appendChild(card);
     });
-  }catch(e){showMessage('Google reviews will appear here once the secure connection is complete. Please use the Google link below to read them now.')}
+  }catch(e){showMessage('Google reviews are temporarily unavailable. Please use the Google link below to read them.')}
+  finally{clearTimeout(timeout)}
 })();
 </script>
 </body>

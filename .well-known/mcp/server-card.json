@@ -1,0 +1,49 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/mcp-server-card/v1.json",
+  "version": "1.0",
+  "protocolVersion": "2025-06-18",
+  "serverInfo": {
+    "name": "awara-hostels",
+    "title": "Awara Hostels & Dormitory",
+    "version": "1.0.0"
+  },
+  "description": "Public, read-only information about Awara Hostels & Dormitory in Chowk, Lucknow, including facilities, location, contact details, booking terms and tariffs.",
+  "documentationUrl": "https://awarahostels.com/llms.txt",
+  "websiteUrl": "https://awarahostels.com/",
+  "transport": {
+    "type": "streamable-http",
+    "endpoint": "/api/mcp"
+  },
+  "capabilities": {
+    "tools": {
+      "listChanged": false
+    }
+  },
+  "authentication": {
+    "required": false,
+    "schemes": []
+  },
+  "tools": [
+    {
+      "name": "get_awara_hostel_information",
+      "title": "Get Awara Hostels information",
+      "description": "Read public information about tariffs, amenities, location, contact details or booking terms.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "topic": {
+            "type": "string",
+            "enum": ["overview", "facilities", "location", "contact", "booking", "tariffs"]
+          }
+        },
+        "required": ["topic"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      }
+    }
+  ]
+}

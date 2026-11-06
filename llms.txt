@@ -9,6 +9,7 @@
 - Privacy policy: https://awarahostels.com/privacy.html
 - Human-readable Markdown: https://awarahostels.com/awara-hostels.md
 - Read-only MCP endpoint: https://awarahostels.com/api/mcp
+- MCP Server Card: https://awarahostels.com/.well-known/mcp/server-card.json
 
 ## Final discounted tariffs
 - Hall Dormitory: ₹299 per bed / night

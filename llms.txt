@@ -7,6 +7,7 @@
 - Contact: https://awarahostels.com/contact.html
 - Booking and stay information: https://awarahostels.com/terms.html
 - Privacy policy: https://awarahostels.com/privacy.html
+- International guest payment help: https://awarahostels.com/contact.html
 - Human-readable Markdown: https://awarahostels.com/awara-hostels.md
 - Read-only MCP endpoint: https://awarahostels.com/api/mcp
 - MCP Server Card: https://awarahostels.com/.well-known/mcp/server-card.json
@@ -20,7 +21,7 @@
 - 2BHK Entire Room: ₹2,999 per night for up to 5 guests; ₹3,500 per night for 6–8 guests (maximum 8); prior confirmation required and available only when both 1BHK rooms are vacant
 
 ## Important booking note
-A booking request is not a reservation. Guests must confirm availability, any applicable taxes, payment method and cancellation terms with Awara. International guests may pay through [PayPal.Me](https://paypal.me/awara888) after Awara confirms availability and the exact amount. This external payment does not confirm a reservation, and PayPal cannot receive domestic payments from Indian customers.
+A booking request is not a reservation. Guests must confirm availability, any applicable taxes, payment method and cancellation terms with Awara. After Awara confirms availability and a USD amount with an international guest, Awara may provide a signed, expiring PayPal Checkout link that verifies the payment status. A paid amount does not itself confirm a stay. PayPal.Me (https://paypal.me/awara888) is a manual fallback, and PayPal cannot receive domestic payments from Indian customers.
 
 ## Contact
 Phone: +91 522 4738695  

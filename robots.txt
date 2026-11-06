@@ -1,4 +1,7 @@
 User-agent: *
 Allow: /
+Disallow: /admin-payments.html
+Disallow: /pay.html
+Disallow: /api/paypal/
 Content-Signal: search=yes, ai-train=no
 Sitemap: https://awarahostels.com/sitemap.xml

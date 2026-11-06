@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Create a confirmed payment link | Awara Hostels</title>
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="canonical" href="https://awarahostels.com/admin-payments.html">
+  <style>
+    :root{--navy:#111a36;--gold:#d1ae50;--paper:#fbf8f1;--ink:#1d2741}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.6 system-ui,-apple-system,Segoe UI,sans-serif}main{width:min(100% - 32px,620px);margin:7vh auto}.card{background:white;border:1px solid #e6dcc6;border-radius:22px;padding:clamp(22px,5vw,42px)}h1{font:700 34px/1.15 Georgia,serif;color:var(--navy)}label{display:block;font-weight:650;margin:16px 0 6px}input,select{width:100%;padding:12px;border:1px solid #c9cdd7;border-radius:9px;font:inherit}button{margin-top:20px;background:var(--navy);color:#fff;border:0;border-radius:28px;padding:13px 20px;font:inherit;font-weight:700;cursor:pointer}.note{font-size:14px;color:#5e667b}.error{color:#a82424;font-weight:650}.result{margin-top:18px;padding:16px;background:#edf7ef;border-radius:12px;overflow-wrap:anywhere}.result a{color:var(--navy);font-weight:700}button:disabled{opacity:.6;cursor:wait}
+  </style>
+</head>
+<body><main><article class="card">
+  <a href="/">Awara Hostels</a>
+  <h1>Create confirmed payment link</h1>
+  <p>Use only after you have confirmed room availability, the final amount with the guest, and the USD amount they agreed to pay. This tool does not reserve rooms or confirm a stay.</p>
+  <form id="quote-form">
+    <label for="key">Awara admin key</label><input id="key" type="password" autocomplete="off" required>
+    <label for="reference">Booking reference</label><input id="reference" inputmode="text" pattern="[A-Za-z0-9-]{3,40}" maxlength="40" required>
+    <label for="amount">Confirmed amount (USD)</label><input id="amount" type="number" min="1" max="10000" step="0.01" required>
+    <label for="expiry">Payment link expiry</label><select id="expiry"><option value="1">1 hour</option><option value="6" selected>6 hours</option><option value="12">12 hours</option><option value="24">24 hours</option></select>
+    <button id="create" type="submit">Create payment link</button>
+  </form>
+  <p id="status" class="note" role="status" aria-live="polite"></p>
+  <div id="result" class="result" hidden></div>
+  <p class="note">The admin key is sent only to Awara’s payment API and is not stored in this browser. Guest payments remain subject to PayPal’s fees and processing checks.</p>
+</article></main><script src="/admin-payments.js" defer></script></body>
+</html>

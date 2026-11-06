@@ -35,7 +35,7 @@ Confirm availability and any applicable taxes directly with Awara. A booking req
 
 ## Booking
 
-A website request does not reserve a bed. Awara must confirm availability before a booking is final. The 2BHK can be booked only when both 1BHK rooms are vacant and requires prior confirmation. International guests may pay using [PayPal.Me](https://paypal.me/awara888) after Awara confirms availability and the exact amount. Guests should enter only the amount quoted by Awara; PayPal payment does not itself confirm a booking. PayPal cannot receive domestic payments from Indian customers. Ask about applicable taxes, advance amount, check-in/check-out time, cancellation, refund terms and domestic payment options before confirming.
+A website request does not reserve a bed. Awara must confirm availability before a booking is final. The 2BHK can be booked only when both 1BHK rooms are vacant and requires prior confirmation. For an international booking, Awara may send a signed, expiring PayPal Checkout link for the USD amount agreed with the guest; PayPal verifies the payment, but Awara confirms the booking separately. [PayPal.Me](https://paypal.me/awara888) is a manual fallback. PayPal cannot receive domestic payments from Indian customers. Ask about applicable taxes, advance amount, check-in/check-out time, cancellation, refund terms and domestic payment options before confirming.
 
 ## More information
 

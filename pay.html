@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Pay confirmed quote | Awara Hostels &amp; Dormitory</title>
+  <meta name="description" content="Pay an international booking amount confirmed directly by Awara Hostels using PayPal.">
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="canonical" href="https://awarahostels.com/pay.html">
+  <style>
+    :root{color-scheme:light;--navy:#111a36;--gold:#d1ae50;--paper:#fbf8f1;--ink:#1d2741}
+    *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.6 system-ui,-apple-system,Segoe UI,sans-serif}
+    main{width:min(100% - 32px,640px);margin:7vh auto}.card{background:#fff;border:1px solid #e6dcc6;border-radius:22px;padding:clamp(22px,5vw,42px);box-shadow:0 12px 40px #111a3610}
+    .brand{font:700 18px Georgia,serif;color:var(--navy);text-decoration:none}.eyebrow{color:#8c6e20;text-transform:uppercase;letter-spacing:.16em;font-weight:700;font-size:12px;margin-top:28px}
+    h1{font:700 clamp(28px,6vw,42px)/1.12 Georgia,serif;color:var(--navy);margin:8px 0 12px}p{margin:10px 0}.quote{background:#f7f3e8;border-radius:14px;padding:18px;margin:22px 0}.quote div{display:flex;justify-content:space-between;gap:12px;padding:5px 0}.quote strong{color:var(--navy)}#paypal-buttons{max-width:420px;margin:20px auto}.status{min-height:30px;color:#34405b}.success{background:#edf7ef;border:1px solid #b8dfc0;border-radius:12px;padding:16px;margin-top:18px}.error{color:#a82424;font-weight:650}.note{font-size:14px;color:#5e667b}.back{display:inline-block;margin-top:24px;color:var(--navy)}[hidden]{display:none!important}
+  </style>
+</head>
+<body>
+  <main><article class="card">
+    <a class="brand" href="/">AWARA HOSTELS &amp; DORMITORY</a>
+    <p class="eyebrow">International guest payment</p>
+    <h1>Pay your confirmed quote</h1>
+    <p>This secure PayPal checkout is for an amount Awara has already confirmed with you. Check the booking reference and USD amount before paying.</p>
+    <section id="quote" class="quote" hidden aria-live="polite"><div><span>Booking reference</span><strong id="reference"></strong></div><div><span>Amount</span><strong id="amount"></strong></div><div><span>Pay by</span><strong id="expires"></strong></div></section>
+    <div id="paypal-buttons"></div>
+    <p id="status" class="status" role="status" aria-live="polite">Loading secure checkout…</p>
+    <section id="success" class="success" hidden><strong>Payment received by PayPal.</strong><p id="receipt"></p><p>Awara will confirm the stay separately. Keep this payment reference for your records.</p></section>
+    <p class="note">Payment is handled by PayPal. This page does not store card details. A payment alone does not reserve a stay; Awara must confirm the booking separately. PayPal is for international payments only.</p>
+    <p><a class="back" href="/">Return to Awara Hostels</a></p>
+  </article></main>
+  <script src="/pay.js" defer></script>
+</body>
+</html>

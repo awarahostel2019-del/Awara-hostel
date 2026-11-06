@@ -22,7 +22,7 @@ const ANSWERS = {
   location: "2nd Floor, Akbar Mansion, Opp. Mazar, Imambara Agha Baqar, Chowk, Lucknow 226003, Uttar Pradesh, India. The site states it is about 300 metres from KGMU gate.",
   contact: "Phone: +91 522 4738695. WhatsApp: +91 89330 13188. Email: awarahostel2019@email.com.",
   tariffs: "Final discounted tariffs: Hall Dormitory ₹299 per bed/night (4 online beds); 4-Bed Dormitory ₹350 per bed/night (4 online beds); 8-Bed Mixed Dormitory ₹399 per bed/night (8 online beds); 1BHK Cooler Room ₹999 per room/night for up to 2 guests; 1BHK AC Room ₹1,500 per room/night for up to 3 guests; 2BHK Entire Room ₹2,999 per night for up to 5 guests or ₹3,500 per night for 6–8 guests (maximum 8), with prior confirmation required. Confirm availability and any applicable taxes with Awara.",
-  booking: "A booking request is not a reservation. Confirm availability, any applicable taxes, payment method and cancellation terms with Awara before the booking is final. The 2BHK is available only when both 1BHK rooms are vacant and requires prior confirmation. The website does not take online payment.",
+  booking: "A booking request is not a reservation. Confirm availability, any applicable taxes, payment method and cancellation terms with Awara before the booking is final. The 2BHK is available only when both 1BHK rooms are vacant and requires prior confirmation. International guests may use PayPal.Me (https://paypal.me/awara888) only after Awara confirms availability and the exact amount; PayPal payment does not confirm a reservation. PayPal cannot receive domestic payments from Indian customers.",
 };
 
 function response(id, result) {

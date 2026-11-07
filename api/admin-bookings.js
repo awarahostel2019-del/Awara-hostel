@@ -36,7 +36,7 @@ module.exports = async function handler(req, res) {
         const rows = await client.query(
           `SELECT reference, stay_type AS "stayType", check_in::text AS "checkIn", check_out::text AS "checkOut",
                   quantity, guest_count AS "guestCount", guest_name AS "guestName", guest_email AS "guestEmail", phone, note,
-                  source, status, payer_country AS "payerCountry", amount_inr AS "amountInr", amount_usd AS "amountUsd", payment_provider AS "paymentProvider",
+                  source, status, payer_country AS "payerCountry", amount_inr AS "amountInr", amount_usd AS "amountUsd", payment_provider AS "paymentProvider", payment_method AS "paymentMethod",
                   payment_capture_id AS "captureId", expires_at AS "expiresAt", created_at AS "createdAt"
              FROM awara_bookings WHERE check_in < $2::date AND check_out > $1::date
              ORDER BY check_in, created_at DESC LIMIT 500`, [from, to],
@@ -82,9 +82,10 @@ module.exports = async function handler(req, res) {
       const quantity = Number(body.quantity);
       const guestCount = Number(body.guestCount || quantity);
       const source = String(body.source || "other");
+      const paymentMethod = String(body.paymentMethod || "");
       const guestLimit = { hall: 4, fourBed: 4, eightBed: 8, cooler: 2, ac: 3, twoBhk: 8 }[stayType];
-      if (!TYPES.has(stayType) || !dayList.length || !Number.isInteger(quantity) || quantity < 1 || quantity > MAX_CAPACITY[stayType] || !Number.isInteger(guestCount) || guestCount < 1 || guestCount > guestLimit || (['hall','fourBed','eightBed'].includes(stayType) && guestCount > quantity) || (['cooler','ac','twoBhk'].includes(stayType) && quantity !== 1) || !SOURCES.has(source)) {
-        return res.status(400).json({ error: "Check the dates, accommodation, guest count and booking source." });
+      if (!TYPES.has(stayType) || !dayList.length || !Number.isInteger(quantity) || quantity < 1 || quantity > MAX_CAPACITY[stayType] || !Number.isInteger(guestCount) || guestCount < 1 || guestCount > guestLimit || (['hall','fourBed','eightBed'].includes(stayType) && guestCount > quantity) || (['cooler','ac','twoBhk'].includes(stayType) && quantity !== 1) || !SOURCES.has(source) || !new Set(["cash", "card", "upi", "ota", "pending"]).has(paymentMethod)) {
+        return res.status(400).json({ error: "Check the dates, accommodation, guest count, booking source and payment mode." });
       }
       const bookingId = crypto.randomUUID();
       const reference = `AWR-${crypto.randomBytes(5).toString("hex").toUpperCase()}`;
@@ -100,12 +101,12 @@ module.exports = async function handler(req, res) {
           }
         }
         await client.query(
-          `INSERT INTO awara_bookings(id,reference,stay_type,check_in,check_out,quantity,guest_count,guest_name,phone,note,source,status,amount_inr)
-           VALUES($1::uuid,$2,$3,$4::date,$5::date,$6,$7,$8,$9,$10,$11,'confirmed',0)`,
-          [bookingId, reference, stayType, body.checkIn, body.checkOut, quantity, guestCount, String(body.guestName || "OTA / offline guest").trim().slice(0,100), String(body.phone || "").trim().slice(0,30), String(body.note || "").trim().slice(0,500), source],
+          `INSERT INTO awara_bookings(id,reference,stay_type,check_in,check_out,quantity,guest_count,guest_name,phone,note,source,status,amount_inr,payment_method)
+           VALUES($1::uuid,$2,$3,$4::date,$5::date,$6,$7,$8,$9,$10,$11,'confirmed',0,$12)`,
+          [bookingId, reference, stayType, body.checkIn, body.checkOut, quantity, guestCount, String(body.guestName || "OTA / offline guest").trim().slice(0,100), String(body.phone || "").trim().slice(0,30), String(body.note || "").trim().slice(0,500), source, paymentMethod],
         );
         await client.query("COMMIT");
-        return res.status(201).json({ reference, status: "confirmed" });
+        return res.status(201).json({ reference, status: "confirmed", paymentMethod });
       } catch (error) {
         await client.query("ROLLBACK").catch(() => {});
         if (error.code === "40001") return res.status(409).json({ error: "Availability changed. Refresh and record this booking again." });

@@ -53,9 +53,10 @@
 
       <section class="card">
         <h2>Record an OTA or offline booking</h2>
-        <p class="help">Add each Booking.com, MakeMyTrip, Goibibo, Hostelworld, phone or walk-in reservation here. It will reduce the website’s availability for the same dates.</p>
+        <p class="help">Add each Booking.com, MakeMyTrip, Goibibo, Hostelworld, phone or walk-in reservation here. Choose how payment was received (or mark it as not collected); it will reduce the website’s availability for the same dates.</p>
         <form id="manual-form" class="grid three">
           <label>Source<select id="source"><option value="booking.com">Booking.com</option><option value="makemytrip">MakeMyTrip</option><option value="goibibo">Goibibo</option><option value="hostelworld">Hostelworld</option><option value="offline">Phone / walk-in</option><option value="other">Other</option></select></label>
+          <label>Payment mode<select id="manual-payment-mode" required><option value="">Choose payment mode</option><option value="cash">Cash</option><option value="card">Card</option><option value="upi">UPI</option><option value="ota">Collected through OTA</option><option value="pending">Not collected yet</option></select></label>
           <label>Accommodation<select id="manual-type"><option value="hall">Hall Dormitory</option><option value="fourBed">4-Bed Dormitory</option><option value="eightBed">8-Bed Mixed Dormitory</option><option value="cooler">1BHK Cooler Room</option><option value="ac">1BHK AC Room</option><option value="twoBhk">2BHK Entire Room</option></select></label>
           <label>Check-in<input id="manual-in" type="date" required></label>
           <label>Check-out<input id="manual-out" type="date" required></label>
@@ -71,7 +72,7 @@
 
       <section class="card">
         <h2>Bookings</h2>
-        <div class="table-wrap"><table><thead><tr><th>Reference / dates</th><th>Stay</th><th>Guest</th><th>Source</th><th>Amount</th><th>Status</th><th>Action</th></tr></thead><tbody id="booking-rows"></tbody></table></div>
+        <div class="table-wrap"><table><thead><tr><th>Reference / dates</th><th>Stay</th><th>Guest</th><th>Source</th><th>Payment mode</th><th>Amount</th><th>Status</th><th>Action</th></tr></thead><tbody id="booking-rows"></tbody></table></div>
       </section>
     </div>
   </main>

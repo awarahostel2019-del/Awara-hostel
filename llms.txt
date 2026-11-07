@@ -18,10 +18,12 @@
 - 8-Bed Mixed Dormitory: ₹399 per bed / night
 - 1BHK Cooler Room: ₹999 per room / night
 - 1BHK AC Room: ₹1,500 per room / night
-- 2BHK Entire Room: ₹2,999 per night for up to 5 guests; ₹3,500 per night for 6–8 guests (maximum 8); prior confirmation required and available only when both 1BHK rooms are vacant
+- 2BHK Entire Room: ₹2,999 per night for up to 5 guests; ₹3,500 per night for 6–8 guests (maximum 8); directly bookable when both 1BHK rooms are vacant for all requested nights
 
 ## Important booking note
-A booking request is not a reservation. Guests must confirm availability, any applicable taxes, payment method and cancellation terms with Awara. After Awara confirms availability and a USD amount with an international guest, Awara may provide a signed, expiring PayPal Checkout link that verifies the payment status. A paid amount does not itself confirm a stay. PayPal.Me (https://paypal.me/awara888) is a manual fallback, and PayPal cannot receive domestic payments from Indian customers.
+Regular website bookings check the website inventory and place a short payment hold. The full listed stay amount is due online; the website confirms the booking only after the payment provider verifies payment. Domestic checkout appears once Awara's approved Indian provider is connected. International checkout uses PayPal in USD. The 2BHK is directly bookable only when both 1BHK rooms are vacant for every requested night. Staff record offline and OTA bookings manually in the staff booking desk; OTA calendars are not automatically connected. Contact Awara directly for cancellation or refund requests. PayPal.Me (https://paypal.me/awara888) remains a manual international-payment fallback and does not confirm a website booking.
+
+The private staff desk is at https://awarahostels.com/staff.html and requires staff sign-in. It is intended for staff to adjust website capacity, record offline/OTA bookings, review site bookings and review online bookings.
 
 ## Contact
 Phone: +91 522 4738695  

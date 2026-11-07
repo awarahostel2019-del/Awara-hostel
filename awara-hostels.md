@@ -19,9 +19,9 @@ Awara Hostels & Dormitory offers dormitory accommodation in Chowk, Old Lucknow, 
 | 8-Bed Mixed Dormitory | ₹399 per bed / night |
 | 1BHK Cooler Room | ₹999 per room / night |
 | 1BHK AC Room | ₹1,500 per room / night |
-| 2BHK Entire Room | ₹2,999 per night for up to 5 guests; ₹3,500 for 6–8 guests (maximum 8); prior confirmation required |
+| 2BHK Entire Room | ₹2,999 per night for up to 5 guests; ₹3,500 for 6–8 guests (maximum 8); requires staff confirmation that both 1BHK rooms are vacant for all requested dates |
 
-Confirm availability and any applicable taxes directly with Awara. A booking request is not a reservation.
+Online booking checks current website inventory. Half of dorm bed capacity is offered online by default to leave room for offline guests; staff can adjust daily availability. International regular bookings are held while the guest pays the full listed stay amount through PayPal. Domestic requests wait for staff to confirm availability and manual payment. 2BHK requests require staff confirmation that both 1BHK rooms are vacant for all requested dates. Ask Awara about any applicable taxes.
 
 ## Address
 
@@ -35,7 +35,11 @@ Confirm availability and any applicable taxes directly with Awara. A booking req
 
 ## Booking
 
-A website request does not reserve a bed. Awara must confirm availability before a booking is final. The 2BHK can be booked only when both 1BHK rooms are vacant and requires prior confirmation. For an international booking, Awara may send a signed, expiring PayPal Checkout link for the USD amount agreed with the guest; PayPal verifies the payment, but Awara confirms the booking separately. [PayPal.Me](https://paypal.me/awara888) is a manual fallback. PayPal cannot receive domestic payments from Indian customers. Ask about applicable taxes, advance amount, check-in/check-out time, cancellation, refund terms and domestic payment options before confirming.
+International regular website bookings use a short inventory hold and full payment through PayPal Checkout in USD. Domestic requests wait for staff; an Indian online payment provider is not connected yet. 2BHK requests need staff confirmation that both 1BHK rooms are vacant for every night. Staff manually enter offline and OTA bookings into the website calendar, which does not sync OTA calendars automatically. Contact Awara for cancellation or refund requests. [PayPal.Me](https://paypal.me/awara888) is a manual international-payment fallback and does not itself confirm a website booking.
+
+## Staff booking desk
+
+The staff-only booking desk at https://awarahostels.com/staff.html is used to adjust daily website inventory, add walk-in and OTA reservations, view online bookings, and review online bookings. Sign-in is required.
 
 ## More information
 

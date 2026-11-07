@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Awara staff booking desk</title>
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="referrer" content="no-referrer">
+  <style>
+    :root{--navy:#111a36;--gold:#d1ae50;--paper:#fbf8f1;--ink:#1d2741;--muted:#667085;--line:#e4e7ec;--green:#18794e;--red:#b42318}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}header{background:var(--navy);color:white;padding:16px max(18px,calc((100vw - 1100px)/2));display:flex;justify-content:space-between;align-items:center;gap:14px}header a{color:white;font-weight:700;text-decoration:none}main{width:min(100% - 28px,1100px);margin:24px auto 70px}h1,h2{color:var(--navy);font-family:Georgia,serif}h1{font-size:clamp(28px,5vw,42px);margin:0 0 6px}h2{font-size:24px;margin:0 0 12px}.lead,.muted{color:var(--muted)}.card{background:white;border:1px solid var(--line);border-radius:18px;padding:clamp(16px,3vw,24px);margin:18px 0;box-shadow:0 6px 22px #111a3609}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}label{display:grid;gap:5px;font-weight:650}input,select,textarea{width:100%;padding:10px 11px;border:1px solid #cbd0da;border-radius:9px;font:inherit;color:var(--ink);background:white}button{border:0;border-radius:9px;padding:10px 15px;background:var(--navy);color:white;font:inherit;font-weight:700;cursor:pointer}button.secondary{background:#f0edf5;color:var(--navy);border:1px solid #ddd7e6}button.danger{background:#fff0ef;color:var(--red);border:1px solid #ffd0cc}.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.row.end{justify-content:flex-end}.wide{grid-column:1/-1}.status{min-height:24px;margin:8px 0;color:var(--green)}.status.error{color:var(--red)}.table-wrap{overflow:auto}table{border-collapse:collapse;width:100%;min-width:740px}th,td{text-align:left;padding:10px 9px;border-bottom:1px solid var(--line);vertical-align:top}th{font-size:13px;color:var(--muted);font-weight:700}.pill{display:inline-block;border-radius:100px;padding:3px 9px;background:#eef1f7;font-size:12px;font-weight:700}.pill.confirmed{background:#e7f6ed;color:var(--green)}.pill.awaiting_staff,.pill.pending_payment{background:#fff4d6;color:#8a5600}.pill.cancelled,.pill.expired{background:#fff0ef;color:var(--red)}.hidden{display:none!important}.signin{max-width:480px;margin:40px auto}.help{font-size:13px;color:var(--muted)}.kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.kpi div{background:#f5f3ed;border-radius:12px;padding:12px}.kpi strong{display:block;font-size:20px;color:var(--navy)}@media(max-width:650px){.grid,.grid.three{grid-template-columns:1fr}.kpi{grid-template-columns:1fr 1fr}header{padding:14px 18px}}
+  </style>
+</head>
+<body>
+  <header><a href="/">Awara Hostels · Staff</a><span id="signed-label" class="hidden">Staff booking desk</span></header>
+  <main>
+    <section id="signin" class="card signin">
+      <h1>Staff booking desk</h1>
+      <p class="lead">Update the website’s sellable inventory and record reservations already received on OTAs, by phone or in person.</p>
+      <form id="login-form">
+        <label>Awara staff key<input id="staff-key" type="password" autocomplete="current-password" required></label>
+        <div class="row"><button type="submit">Open booking desk</button></div>
+      </form>
+      <p class="help">The key is checked securely by Awara’s booking API and kept only in this browser tab. Keep it private.</p>
+      <p id="login-status" class="status" role="status"></p>
+    </section>
+
+    <div id="desk" class="hidden">
+      <section class="card">
+        <div class="row" style="justify-content:space-between"><div><h1>Bookings & inventory</h1><p class="lead">International website bookings confirm after PayPal payment. Domestic and 2BHK requests need staff follow-up. Keep inventory updated with existing guests and OTA reservations.</p></div><button id="logout" class="secondary" type="button">Sign out</button></div>
+        <form id="range-form" class="row">
+          <label>From<input id="from-date" type="date" required></label>
+          <label>To (checkout)<input id="to-date" type="date" required></label>
+          <button type="submit">Refresh dates</button>
+        </form>
+        <p id="main-status" class="status" role="status"></p>
+        <div class="kpi"><div><strong id="pending-count">0</strong>Needs action</div><div><strong id="confirmed-count">0</strong>Confirmed</div><div><strong id="booking-count">0</strong>Bookings in range</div></div>
+      </section>
+
+      <section class="card">
+        <h2>Set website inventory</h2>
+        <p class="help">Set how many of Awara’s beds or rooms the website may sell each night. Capacity cannot exceed the listed inventory. “Blocked” keeps some of that capacity offline. Record OTA, phone and walk-in reservations below so they reduce website availability.</p>
+        <form id="inventory-form" class="grid three">
+          <label>Accommodation<select id="inventory-type"><option value="hall">Hall Dormitory</option><option value="fourBed">4-Bed Dormitory</option><option value="eightBed">8-Bed Mixed Dormitory</option><option value="cooler">1BHK Cooler Room</option><option value="ac">1BHK AC Room</option><option value="twoBhk">2BHK Entire Room</option></select></label>
+          <label>First night<input id="inventory-from" type="date" required></label>
+          <label>Last night<input id="inventory-to" type="date" required></label>
+          <label>Sellable capacity per night<input id="capacity" type="number" min="0" max="4" required></label>
+          <label>Blocked from website<input id="blocked" type="number" min="0" max="4" value="0" required></label>
+          <div class="row end wide"><button type="submit">Save inventory range</button></div>
+        </form>
+        <p id="inventory-status" class="status" role="status"></p>
+        <div class="table-wrap"><table><thead><tr><th>Night</th><th>Accommodation</th><th>Website capacity</th><th>Blocked</th><th>Bookings / OTA</th><th>Still online</th></tr></thead><tbody id="inventory-rows"></tbody></table></div>
+      </section>
+
+      <section class="card">
+        <h2>Record an OTA or offline booking</h2>
+        <p class="help">Add each Booking.com, MakeMyTrip, Goibibo, Hostelworld, phone or walk-in reservation here. It will reduce the website’s availability for the same dates.</p>
+        <form id="manual-form" class="grid three">
+          <label>Source<select id="source"><option value="booking.com">Booking.com</option><option value="makemytrip">MakeMyTrip</option><option value="goibibo">Goibibo</option><option value="hostelworld">Hostelworld</option><option value="offline">Phone / walk-in</option><option value="other">Other</option></select></label>
+          <label>Accommodation<select id="manual-type"><option value="hall">Hall Dormitory</option><option value="fourBed">4-Bed Dormitory</option><option value="eightBed">8-Bed Mixed Dormitory</option><option value="cooler">1BHK Cooler Room</option><option value="ac">1BHK AC Room</option><option value="twoBhk">2BHK Entire Room</option></select></label>
+          <label>Check-in<input id="manual-in" type="date" required></label>
+          <label>Check-out<input id="manual-out" type="date" required></label>
+          <label>Beds / rooms booked<input id="manual-quantity" type="number" min="1" max="4" value="1" required></label>
+          <label>Guest count<input id="manual-guests" type="number" min="1" max="4" value="1" required></label>
+          <label>Guest / OTA reference (optional)<input id="manual-name" maxlength="100" placeholder="Name or OTA reference"></label>
+          <label>Phone (optional)<input id="manual-phone" maxlength="30" placeholder="Guest phone"></label>
+          <label>Note (optional)<input id="manual-note" maxlength="500" placeholder="For example, Booking.com ID"></label>
+          <div class="row end wide"><button type="submit">Record this confirmed booking</button></div>
+        </form>
+        <p id="manual-status" class="status" role="status"></p>
+      </section>
+
+      <section class="card">
+        <h2>Bookings</h2>
+        <div class="table-wrap"><table><thead><tr><th>Reference / dates</th><th>Stay</th><th>Guest</th><th>Source</th><th>Amount</th><th>Status</th><th>Action</th></tr></thead><tbody id="booking-rows"></tbody></table></div>
+      </section>
+    </div>
+  </main>
+  <script src="/staff.js" defer></script>
+</body>
+</html>

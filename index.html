@@ -345,7 +345,7 @@ footer{padding:28px 0;text-align:center;font:14px "Trebuchet MS",Arial,sans-seri
     availabilityTimer=setTimeout(function(){
       var request=++availabilityRequest;
       var query=new URLSearchParams({from:ci.value,to:co.value,stayType:stayType.value});
-      fetch('/api/availability?'+query.toString(),{headers:{Accept:'application/json'},cache:'no-store'})
+      fetch('/api/bookings?'+query.toString(),{headers:{Accept:'application/json'},cache:'no-store'})
         .then(function(response){return response.json().then(function(data){if(!response.ok)throw new Error(data.error||'Availability check failed.');return data})})
         .then(function(data){if(request!==availabilityRequest||key!==selectedAvailabilityKey())return;liveAvailability=Array.isArray(data.availability)?data.availability:[];availabilityKey=key;update();availabilityMessage()})
         .catch(function(){if(request!==availabilityRequest||key!==selectedAvailabilityKey())return;$('availability-status').textContent='Could not check availability just now. It will be verified securely when you continue.'})

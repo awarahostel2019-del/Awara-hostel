@@ -234,6 +234,7 @@ footer{padding:28px 0;text-align:center;font:14px "Trebuchet MS",Arial,sans-seri
         <form id="bf" class="bf" novalidate>
           <label>Check-in<input type="date" id="ci" required></label>
           <label>Check-out<input type="date" id="co" required></label>
+          <p class="note full" id="availability-status" role="status" aria-live="polite">Choose dates and accommodation to check online availability.</p>
           <label class="full">Accommodation<select id="stayType"><option value="hall">Hall Dormitory · ₹299 per bed/night (2 beds online by default)</option><option value="fourBed">4-Bed Dormitory · ₹350 per bed/night (2 beds online by default)</option><option value="eightBed">8-Bed Mixed Dormitory · ₹399 per bed/night (4 beds online by default)</option><option value="cooler">1BHK Cooler Room · ₹999 per night, up to 2 guests</option><option value="ac">1BHK AC Room · ₹1,500 per night, up to 3 guests</option><option value="twoBhk">2BHK Entire Room · ₹2,999 up to 5 guests; ₹3,500 for 6–8 guests (staff confirmation required)</option></select></label>
           <label id="guest-field" class="hidden">Number of guests<input type="number" id="guests" min="1" max="2" value="2" required></label>
           <label id="dorm-field">Dorm area preference<select id="dorm"><option>Boys dorm</option><option>Girls dorm</option></select></label>
@@ -313,12 +314,43 @@ footer{padding:28px 0;text-align:center;font:14px "Trebuchet MS",Arial,sans-seri
   var ci=$('ci'),co=$('co'),beds=$('beds'),guests=$('guests'),stayType=$('stayType');
   var rates={hall:299,fourBed:350,eightBed:399,cooler:999,ac:1500,twoBhk:2999};
   var bedLimits={hall:4,fourBed:4,eightBed:8},guestLimits={cooler:2,ac:3,twoBhk:8};
+  var liveAvailability=null,availabilityKey='',availabilityTimer=null,availabilityRequest=0;
   function iso(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
   function parse(v){var p=v.split('-');return v?Date.UTC(+p[0],+p[1]-1,+p[2]):NaN}
   function nights(){var n=(parse(co.value)-parse(ci.value))/864e5;return n>0?n:0}
   function show(v){var p=v.split('-');return p[2]+'/'+p[1]+'/'+p[0]}
   function inr(n){return '₹'+n.toLocaleString('en-IN')}
   function isDorm(){return stayType.value==='hall'||stayType.value==='fourBed'||stayType.value==='eightBed'}
+  function selectedAvailabilityKey(){return ci.value+'|'+co.value+'|'+stayType.value}
+  function availabilityMessage(){
+    var status=$('availability-status'),type=stayType.value,key=selectedAvailabilityKey();
+    if(!nights()){liveAvailability=null;availabilityKey='';status.textContent='Choose dates and accommodation to check online availability.';return}
+    if(availabilityKey!==key||!liveAvailability){status.textContent='Checking live availability for every night…';return}
+    var remaining=liveAvailability.reduce(function(min,row){return Math.min(min,Number(row.remaining)||0)},Infinity);
+    if(remaining<=0){status.textContent='No online availability for every night of this stay. Try different dates or contact Awara on WhatsApp.';return}
+    if(isDorm()){
+      beds.max=Math.min(bedLimits[type],remaining);
+      $('qty-title').textContent='Number of beds (max '+beds.max+' online)';
+      status.textContent='Available for every selected night: '+remaining+' online bed'+(remaining===1?'':'s')+'. Offline guests use the remaining inventory.';
+    }else{
+      status.textContent=remaining+' room'+(remaining===1?'':'s')+' available for every selected night.';
+    }
+  }
+  function refreshAvailability(){
+    var key=selectedAvailabilityKey();
+    liveAvailability=null;availabilityKey='';
+    availabilityMessage();
+    clearTimeout(availabilityTimer);
+    if(!nights())return;
+    availabilityTimer=setTimeout(function(){
+      var request=++availabilityRequest;
+      var query=new URLSearchParams({from:ci.value,to:co.value,stayType:stayType.value});
+      fetch('/api/availability?'+query.toString(),{headers:{Accept:'application/json'},cache:'no-store'})
+        .then(function(response){return response.json().then(function(data){if(!response.ok)throw new Error(data.error||'Availability check failed.');return data})})
+        .then(function(data){if(request!==availabilityRequest||key!==selectedAvailabilityKey())return;liveAvailability=Array.isArray(data.availability)?data.availability:[];availabilityKey=key;update();availabilityMessage()})
+        .catch(function(){if(request!==availabilityRequest||key!==selectedAvailabilityKey())return;$('availability-status').textContent='Could not check availability just now. It will be verified securely when you continue.'})
+    },180);
+  }
   var t=new Date(),today=iso(t);
   ci.min=today;co.min=today;ci.value=today;
   var tm=new Date(t.getTime()+864e5);co.value=iso(tm);
@@ -326,28 +358,31 @@ footer{padding:28px 0;text-align:center;font:14px "Trebuchet MS",Arial,sans-seri
     if(ci.value){var d=new Date(parse(ci.value)+864e5);var m=d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0');co.min=m;}
     var dorm=isDorm(),n=nights(),type=stayType.value,b=dorm?Math.max(1,parseInt(beds.value,10)||1):1,g=dorm?0:Math.max(1,parseInt(guests.value,10)||1),rate=rates[type]||0,unit=dorm?'bed':'room';
     if(type==='twoBhk'&&g>=6)rate=3500;
-    beds.max=bedLimits[type]||1;
+    beds.max=Math.min(bedLimits[type]||1,availabilityKey===selectedAvailabilityKey()&&liveAvailability?liveAvailability.reduce(function(min,row){return Math.min(min,Number(row.remaining)||0)},Infinity):bedLimits[type]||1);
     if(dorm&&parseInt(beds.value,10)>bedLimits[type])beds.value=bedLimits[type];
     var guestLimit=guestLimits[type]||1;
     guests.max=guestLimit;
     if(!dorm&&parseInt(guests.value,10)>guestLimit)guests.value=guestLimit;
-    $('qty-title').textContent='Number of beds (max '+(bedLimits[type]||0)+')';
+    $('qty-title').textContent='Number of beds (max '+beds.max+(availabilityKey===selectedAvailabilityKey()&&liveAvailability?' online':'')+')';
     $('dorm-field').classList.toggle('hidden',!dorm);$('beds-field').classList.toggle('hidden',!dorm);
     $('guest-field').classList.toggle('hidden',dorm);
     $('quantity-title').textContent=dorm?'Beds':'Guests';$('sb').textContent=dorm?b:g;
     $('sr').textContent=inr(rate)+' per '+unit+' / night';$('sn').textContent=n||'–';
     $('st').textContent=n?inr(rate*b*n):'Choose dates';
     $('booking-note').textContent=(type==='twoBhk'?'2BHK requests need staff confirmation after checking both 1BHK rooms for all selected dates. ':'')+'Total uses the listed nightly tariff; live website inventory is checked when you submit.';
+    availabilityMessage();
   }
-  ['input','change'].forEach(function(e){ci.addEventListener(e,update);co.addEventListener(e,update);beds.addEventListener(e,update);guests.addEventListener(e,update);stayType.addEventListener(e,update)});
+  ['input','change'].forEach(function(e){ci.addEventListener(e,function(){update();refreshAvailability()});co.addEventListener(e,function(){update();refreshAvailability()});beds.addEventListener(e,update);guests.addEventListener(e,update);stayType.addEventListener(e,function(){update();refreshAvailability()})});
   stayType.addEventListener('change',function(){guests.value=({cooler:2,ac:3,twoBhk:5}[stayType.value]||1);update()});
   update();
+  refreshAvailability();
   $('bf').addEventListener('submit',function(e){
     e.preventDefault();
     var err=$('err'),button=$('book-submit');err.textContent='';$('ok').classList.add('hidden');
     var n=nights(),b=parseInt(beds.value,10)||0,nm=$('nm').value.trim(),em=$('em').value.trim(),ph=$('ph').value.replace(/\D/g,'');
     if(!ci.value||!co.value||n<1){err.textContent='Please choose a check-out date after the check-in date.';return}
     if(parse(ci.value)<parse(today)){err.textContent='Check-in cannot be in the past.';return}
+    if(availabilityKey===selectedAvailabilityKey()&&liveAvailability){var remaining=liveAvailability.reduce(function(min,row){return Math.min(min,Number(row.remaining)||0)},Infinity);if(remaining<1){err.textContent='No online availability for every night of this stay. Try different dates or contact Awara on WhatsApp.';return}if(isDorm()&&b>remaining){err.textContent='Only '+remaining+' online bed'+(remaining===1?' is':'s are')+' available for every selected night. Reduce the number of beds or choose other dates.';return}if(!isDorm()&&remaining<1){err.textContent='This room is not available for every selected night. Please choose other dates.';return}}
     if(isDorm()&&(b<1||b>bedLimits[stayType.value])){err.textContent='Please enter 1 to '+bedLimits[stayType.value]+' beds for this dorm.';return}
     if(!isDorm()&&(parseInt(guests.value,10)<1||parseInt(guests.value,10)>guestLimits[stayType.value])){err.textContent='Guest count is above the maximum for this accommodation.';return}
     if(nm.length<2){err.textContent='Please enter your name.';return}

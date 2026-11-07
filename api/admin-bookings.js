@@ -5,11 +5,28 @@ const { getUsdInrRate, toUsd } = require("../lib/fx");
 
 const TYPES = new Set(Object.keys(MAX_CAPACITY));
 const SOURCES = new Set(["offline", "booking.com", "makemytrip", "goibibo", "hostelworld", "other"]);
+const PAYMENT_METHODS = new Set(["cash", "card", "upi", "ota", "other"]);
+const ID_TYPES = new Set(["Aadhaar card", "Driving licence", "Voter ID card", "Passport", "Other government photo ID"]);
 
 function dates(req) {
   const from = String(req.query.from || "");
   const to = String(req.query.to || "");
   return { from, to, days: isoDays(from, to) };
+}
+
+async function insertPayment(client, { bookingId, totalAmount, amountPaid, method, note }) {
+  const previous = await client.query("SELECT COALESCE(SUM(amount_inr),0)::numeric AS paid, COUNT(*)::int AS count FROM awara_payments WHERE booking_id=$1::uuid", [bookingId]);
+  const paidBefore = Number(previous.rows[0].paid);
+  if (amountPaid <= 0 || paidBefore + amountPaid > totalAmount) throw Object.assign(new Error("Payment cannot exceed the remaining balance."), { publicStatus: 400 });
+  const kind = paidBefore + amountPaid >= totalAmount ? "full" : (previous.rows[0].count === 0 ? "advance" : "partial");
+  const seq = await client.query("SELECT nextval('awara_receipt_sequence')::text AS value");
+  const receiptNumber = `AWR-${new Date().getFullYear()}-${String(seq.rows[0].value).padStart(6, "0")}`;
+  const result = await client.query(
+    `INSERT INTO awara_payments(booking_id,receipt_number,amount_inr,method,kind,note)
+     VALUES($1::uuid,$2,$3,$4,$5,$6) RETURNING receipt_number AS "receiptNumber", amount_inr AS amount, method, kind, note, created_at AS "createdAt"`,
+    [bookingId, receiptNumber, amountPaid, method, kind, String(note || "").trim().slice(0, 240)],
+  );
+  return result.rows[0];
 }
 
 module.exports = async function handler(req, res) {
@@ -34,10 +51,12 @@ module.exports = async function handler(req, res) {
       const client = await db.connect();
       try {
         const rows = await client.query(
-          `SELECT reference, stay_type AS "stayType", check_in::text AS "checkIn", check_out::text AS "checkOut",
+          `SELECT id, reference, stay_type AS "stayType", check_in::text AS "checkIn", check_out::text AS "checkOut",
                   quantity, guest_count AS "guestCount", guest_name AS "guestName", guest_email AS "guestEmail", phone, note,
                   source, status, payer_country AS "payerCountry", amount_inr AS "amountInr", amount_usd AS "amountUsd", payment_provider AS "paymentProvider", payment_method AS "paymentMethod",
-                  payment_capture_id AS "captureId", expires_at AS "expiresAt", created_at AS "createdAt"
+                  payment_capture_id AS "captureId", expires_at AS "expiresAt", created_at AS "createdAt",
+                  stay_status AS "stayStatus", id_type AS "idType", (id_verified_at IS NOT NULL) AS "idVerified",
+                  checked_in_at AS "checkedInAt", checked_out_at AS "checkedOutAt"
              FROM awara_bookings WHERE check_in < $2::date AND check_out > $1::date
              ORDER BY check_in, created_at DESC LIMIT 500`, [from, to],
         );
@@ -46,11 +65,59 @@ module.exports = async function handler(req, res) {
           const byDay = await availabilityForDays(client, days, stayType);
           for (const availability of byDay) inventory.push({ ...availability, stayType });
         }
-        return res.status(200).json({ bookings: rows.rows, inventory });
+        const payments = await client.query(
+          `SELECT p.booking_id AS "bookingId", p.receipt_number AS "receiptNumber", p.amount_inr AS amount,
+                  p.method, p.kind, p.note, p.created_at AS "createdAt"
+             FROM awara_payments p JOIN awara_bookings b ON b.id=p.booking_id
+            WHERE b.check_in < $2::date AND b.check_out > $1::date ORDER BY p.created_at`, [from, to],
+        );
+        const paymentMap = new Map();
+        for (const payment of payments.rows) {
+          const list = paymentMap.get(payment.bookingId) || [];
+          list.push(payment); paymentMap.set(payment.bookingId, list);
+        }
+        const enriched = rows.rows.map((booking) => {
+          const history = paymentMap.get(booking.id) || [];
+          const total = Number(booking.amountInr) || 0;
+          const recorded = history.reduce((sum, payment) => sum + Number(payment.amount), 0);
+          const paidTotal = booking.paymentProvider === "paypal" && booking.status === "confirmed" ? Math.max(recorded, total) : recorded;
+          return { ...booking, payments: history, paidTotal, balanceDue: Math.max(0, total - paidTotal) };
+        });
+        return res.status(200).json({ bookings: enriched, inventory });
       } finally { client.release(); }
     }
     if (req.method !== "POST" && req.method !== "PATCH") return res.status(405).json({ error: "Method not allowed." });
     const body = req.body || {};
+    if (body.action === "record-payment") {
+      const reference = String(body.reference || "").trim();
+      const amount = Number(body.amount);
+      const method = String(body.method || "");
+      if (!Number.isFinite(amount) || amount <= 0 || amount > 1000000 || !PAYMENT_METHODS.has(method)) return res.status(400).json({ error: "Enter a valid amount and payment method." });
+      const client = await db.connect();
+      try {
+        await client.query("BEGIN");
+        const found = await client.query("SELECT id, amount_inr, status FROM awara_bookings WHERE reference=$1 FOR UPDATE", [reference]);
+        const booking = found.rows[0];
+        if (!booking || booking.status === "cancelled") { await client.query("ROLLBACK"); return res.status(404).json({ error: "Booking not found or cancelled." }); }
+        const receipt = await insertPayment(client, { bookingId: booking.id, totalAmount: Number(booking.amount_inr), amountPaid: amount, method, note: body.note });
+        await client.query("UPDATE awara_bookings SET payment_method=$2, updated_at=now() WHERE id=$1::uuid", [booking.id, method]);
+        await client.query("COMMIT");
+        return res.status(201).json({ receipt, reference });
+      } catch (error) { await client.query("ROLLBACK").catch(() => {}); if (error.publicStatus) return res.status(error.publicStatus).json({ error: error.message }); throw error; }
+      finally { client.release(); }
+    }
+    if (body.action === "update-stay") {
+      const reference = String(body.reference || "").trim();
+      const action = String(body.stayAction || "");
+      const idType = String(body.idType || "");
+      if (!new Set(["check-in", "check-out"]).has(action)) return res.status(400).json({ error: "Choose check-in or check-out." });
+      if (action === "check-in" && (!ID_TYPES.has(idType) || body.idVerified !== true)) return res.status(400).json({ error: "Select a valid photo ID and confirm you checked it." });
+      const result = action === "check-in"
+        ? await db.query(`UPDATE awara_bookings SET stay_status='checked_in',id_type=$2,id_verified_at=now(),checked_in_at=now(),updated_at=now() WHERE reference=$1 AND status='confirmed' AND stay_status='booked' RETURNING reference,stay_status AS "stayStatus"`, [reference, idType])
+        : await db.query(`UPDATE awara_bookings SET stay_status='checked_out',checked_out_at=now(),updated_at=now() WHERE reference=$1 AND status='confirmed' AND stay_status='checked_in' RETURNING reference,stay_status AS "stayStatus"`, [reference]);
+      if (!result.rowCount) return res.status(409).json({ error: "Check that this confirmed booking is at the right check-in/check-out stage." });
+      return res.status(200).json(result.rows[0]);
+    }
     if (body.action === "set-inventory") {
       const dayList = isoDays(String(body.from || ""), String(body.to || ""));
       const stayType = String(body.stayType || "");
@@ -82,10 +149,12 @@ module.exports = async function handler(req, res) {
       const quantity = Number(body.quantity);
       const guestCount = Number(body.guestCount || quantity);
       const source = String(body.source || "other");
+      const totalAmount = Number(body.totalAmount);
+      const amountPaid = Number(body.amountPaid || 0);
       const paymentMethod = String(body.paymentMethod || "");
       const guestLimit = { hall: 4, fourBed: 4, eightBed: 8, cooler: 2, ac: 3, twoBhk: 8 }[stayType];
-      if (!TYPES.has(stayType) || !dayList.length || !Number.isInteger(quantity) || quantity < 1 || quantity > MAX_CAPACITY[stayType] || !Number.isInteger(guestCount) || guestCount < 1 || guestCount > guestLimit || (['hall','fourBed','eightBed'].includes(stayType) && guestCount > quantity) || (['cooler','ac','twoBhk'].includes(stayType) && quantity !== 1) || !SOURCES.has(source) || !new Set(["cash", "card", "upi", "ota", "pending"]).has(paymentMethod)) {
-        return res.status(400).json({ error: "Check the dates, accommodation, guest count, booking source and payment mode." });
+      if (!TYPES.has(stayType) || !dayList.length || !Number.isInteger(quantity) || quantity < 1 || quantity > MAX_CAPACITY[stayType] || !Number.isInteger(guestCount) || guestCount < 1 || guestCount > guestLimit || (['hall','fourBed','eightBed'].includes(stayType) && guestCount > quantity) || (['cooler','ac','twoBhk'].includes(stayType) && quantity !== 1) || !SOURCES.has(source) || !Number.isFinite(totalAmount) || totalAmount < 0 || !Number.isFinite(amountPaid) || amountPaid < 0 || amountPaid > totalAmount || (amountPaid > 0 && !PAYMENT_METHODS.has(paymentMethod))) {
+        return res.status(400).json({ error: "Check the dates, accommodation, guest count and booking source." });
       }
       const bookingId = crypto.randomUUID();
       const reference = `AWR-${crypto.randomBytes(5).toString("hex").toUpperCase()}`;
@@ -102,11 +171,13 @@ module.exports = async function handler(req, res) {
         }
         await client.query(
           `INSERT INTO awara_bookings(id,reference,stay_type,check_in,check_out,quantity,guest_count,guest_name,phone,note,source,status,amount_inr,payment_method)
-           VALUES($1::uuid,$2,$3,$4::date,$5::date,$6,$7,$8,$9,$10,$11,'confirmed',0,$12)`,
-          [bookingId, reference, stayType, body.checkIn, body.checkOut, quantity, guestCount, String(body.guestName || "OTA / offline guest").trim().slice(0,100), String(body.phone || "").trim().slice(0,30), String(body.note || "").trim().slice(0,500), source, paymentMethod],
+           VALUES($1::uuid,$2,$3,$4::date,$5::date,$6,$7,$8,$9,$10,$11,'confirmed',$12,$13)`,
+          [bookingId, reference, stayType, body.checkIn, body.checkOut, quantity, guestCount, String(body.guestName || "OTA / offline guest").trim().slice(0,100), String(body.phone || "").trim().slice(0,30), String(body.note || "").trim().slice(0,500), source, totalAmount, amountPaid ? paymentMethod : null],
         );
+        let receipt = null;
+        if (amountPaid > 0) receipt = await insertPayment(client, { bookingId, totalAmount, amountPaid, method: paymentMethod, note: "Initial payment" });
         await client.query("COMMIT");
-        return res.status(201).json({ reference, status: "confirmed", paymentMethod });
+        return res.status(201).json({ reference, status: "confirmed", receipt });
       } catch (error) {
         await client.query("ROLLBACK").catch(() => {});
         if (error.code === "40001") return res.status(409).json({ error: "Availability changed. Refresh and record this booking again." });
@@ -119,7 +190,7 @@ module.exports = async function handler(req, res) {
       try {
         await client.query("BEGIN");
         const found = await client.query(
-          `SELECT id, reference, stay_type AS "stayType", check_in::text AS "checkIn", check_out::text AS "checkOut", quantity, payer_country AS "payerCountry", status, expires_at AS "expiresAt"
+          `SELECT id, reference, stay_type AS "stayType", check_in::text AS "checkIn", check_out::text AS "checkOut", quantity, amount_inr AS "amountInr", payer_country AS "payerCountry", status, expires_at AS "expiresAt"
              FROM awara_bookings WHERE reference=$1 FOR UPDATE`, [reference],
         );
         const booking = found.rows[0];
@@ -161,13 +232,14 @@ module.exports = async function handler(req, res) {
             if (stock.capacity - stock.blocked - stock.booked < booking.quantity) throw Object.assign(new Error(`Inventory is no longer free on ${day}.`), { publicStatus: 409 });
           }
         }
-        const updated = await client.query(
+      const updated = await client.query(
           `UPDATE awara_bookings SET status='confirmed', payment_provider='manual', expires_at=NULL, updated_at=now()
             WHERE id=$1::uuid AND status='awaiting_staff' RETURNING reference`, [booking.id],
         );
         if (!updated.rowCount) throw Object.assign(new Error("This request changed. Refresh and try again."), { publicStatus: 409 });
+        const receipt = await insertPayment(client, { bookingId: booking.id, totalAmount: Number(booking.amountInr || 0), amountPaid: Number(booking.amountInr || 0), method: "other", note: "Manual payment verified by staff" });
         await client.query("COMMIT");
-        return res.status(200).json({ reference, status: "confirmed" });
+        return res.status(200).json({ reference, status: "confirmed", receipt });
       } catch (error) {
         await client.query("ROLLBACK").catch(() => {});
         if (error.publicStatus) return res.status(error.publicStatus).json({ error: error.message });

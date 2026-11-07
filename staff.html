@@ -65,6 +65,10 @@
           <label>Guest / OTA reference (optional)<input id="manual-name" maxlength="100" placeholder="Name or OTA reference"></label>
           <label>Phone (optional)<input id="manual-phone" maxlength="30" placeholder="Guest phone"></label>
           <label>Note (optional)<input id="manual-note" maxlength="500" placeholder="For example, Booking.com ID"></label>
+          <label>Stay total (₹)<input id="manual-total" type="number" min="0" step="1" required></label>
+          <label>Amount received now (₹)<input id="manual-paid" type="number" min="0" step="1" value="0" required></label>
+          <label>Received by<select id="manual-payment-mode"><option value="cash">Cash</option><option value="card">Card</option><option value="upi">UPI</option><option value="ota">OTA collected</option><option value="other">Other</option></select></label>
+          <p class="help wide">Leave “Amount received” at ₹0 if not paid. Receipts record money staff says has been received; verify cash, card or UPI first.</p>
           <div class="row end wide"><button type="submit">Record this confirmed booking</button></div>
         </form>
         <p id="manual-status" class="status" role="status"></p>
@@ -72,6 +76,8 @@
 
       <section class="card">
         <h2>Bookings</h2>
+        <p class="help">ID number/photo is not collected here. Keep the guest original ID according to your normal check-in process; mark only its type and that staff verified it.</p>
+        <p class="help">ID number/photo is not collected here. Keep the guest’s original ID according to your normal check-in process; mark only its type and that staff verified it.</p>
         <div class="table-wrap"><table><thead><tr><th>Reference / dates</th><th>Stay</th><th>Guest</th><th>Source</th><th>Payment mode</th><th>Amount</th><th>Status</th><th>Action</th></tr></thead><tbody id="booking-rows"></tbody></table></div>
       </section>
     </div>

@@ -2,7 +2,6 @@
   const status = document.getElementById("status");
   const params = new URLSearchParams(location.search);
   const quoteToken = params.get("q") || "";
-  let sdkReady = false;
 
   function message(text, isError = false) {
     status.textContent = text;
@@ -31,6 +30,11 @@
       if (!quoteResponse.ok) throw new Error(quote.error || "This payment quote is invalid. Ask Awara for a new link.");
       document.getElementById("reference").textContent = quote.reference;
       document.getElementById("amount").textContent = `${quote.amount} ${quote.currency}`;
+      if (quote.amountInr) {
+        document.getElementById("amount-inr").textContent = `₹${Number(quote.amountInr).toLocaleString("en-IN")}`;
+        document.getElementById("inr-row").hidden = false;
+        document.getElementById("fx-note").hidden = false;
+      }
       document.getElementById("expires").textContent = new Date(quote.expiresAt).toLocaleString();
       document.getElementById("quote").hidden = false;
       const response = await fetch("/api/paypal/config", { cache: "no-store" });
@@ -40,7 +44,6 @@
       sdk.src = "https://www.paypal.com/sdk/js?" + new URLSearchParams([["client-id", config.clientId], ["currency", "USD"], ["intent", "capture"], ["components", "buttons"]]);
       sdk.onload = () => {
         if (!window.paypal) { message("PayPal checkout could not load. Please contact Awara.", true); return; }
-        sdkReady = true;
         window.paypal.Buttons({
           style: { layout: "vertical", shape: "rect", color: "gold", label: "paypal" },
           createOrder: () => post("/api/paypal/create-order", { token: quoteToken }).then((result) => result.id),
@@ -49,6 +52,9 @@
             return post("/api/paypal/capture-order", { token: quoteToken, orderId: data.orderID }).then((result) => {
               document.getElementById("success").hidden = false;
               document.getElementById("receipt").textContent = `Booking reference ${result.reference} · ${result.amount} ${result.currency} · PayPal capture ${result.captureId}`;
+              document.getElementById("confirmation-note").textContent = result.bookingConfirmed
+                ? "Your stay is confirmed. Keep this booking reference for your records."
+                : "PayPal received the payment. Awara is checking the booking record; contact us with this reference if confirmation does not appear.";
               document.getElementById("paypal-buttons").hidden = true;
               message("Payment verified.");
             });

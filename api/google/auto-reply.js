@@ -1,4 +1,4 @@
-const { findAwaraLocation, getAccessToken, googleJson, listReviews, replyForReview } = require("../../lib/google-business-profile");
+const { findAwaraLocation, getAccessToken, googleJson, listReviews, replyForReview, requiresHumanReview } = require("../../lib/google-business-profile");
 
 function authorized(req) {
   const expected = process.env.CRON_SECRET || "";
@@ -20,10 +20,12 @@ module.exports = async function handler(req, res) {
     const reviews = await listReviews(accessToken, location.accountName, location.locationName, 3);
     const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
     let replied = 0;
+    let needsManualReview = 0;
     for (const review of reviews) {
       if (review.reviewReply || !review.name) continue;
       const createdAt = Date.parse(review.createTime || "");
       if (!Number.isFinite(createdAt) || createdAt < cutoff) continue;
+      if (requiresHumanReview(review)) { needsManualReview += 1; continue; }
       await googleJson(`https://mybusiness.googleapis.com/v4/${review.name}/reply`, accessToken, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -31,7 +33,7 @@ module.exports = async function handler(req, res) {
       });
       replied += 1;
     }
-    return res.status(200).json({ ok: true, checked: reviews.length, replied, scope: "new reviews from the last 7 days", cadence: "daily" });
+    return res.status(200).json({ ok: true, checked: reviews.length, replied, needsManualReview, scope: "new reviews from the last 7 days", cadence: "daily" });
   } catch {
     return res.status(503).json({ error: "Google review replies could not be processed. Check connection and location access." });
   }

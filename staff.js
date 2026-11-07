@@ -2,6 +2,7 @@
   const $ = (id) => document.getElementById(id);
   const KEY_NAME = "awara_staff_key";
   const labels = { hall: "Hall Dormitory", fourBed: "4-Bed Dormitory", eightBed: "8-Bed Mixed Dormitory", cooler: "1BHK Cooler Room", ac: "1BHK AC Room", twoBhk: "2BHK Entire Room" };
+  const paymentLabels = { cash: "Cash", card: "Card", upi: "UPI", ota: "Collected through OTA", pending: "Not collected yet", paypal: "PayPal", payu: "PayU", manual: "Manual payment" };
   const caps = { hall: 4, fourBed: 4, eightBed: 8, cooler: 1, ac: 1, twoBhk: 1 };
   const defaultCaps = { hall: 2, fourBed: 2, eightBed: 4, cooler: 1, ac: 1, twoBhk: 1 };
   let staffKey = sessionStorage.getItem(KEY_NAME) || "";
@@ -68,6 +69,7 @@
       td(row, `${labels[booking.stayType] || booking.stayType}\n${booking.quantity} · ${booking.guestCount} guests`);
       td(row, `${booking.guestName || ""}${booking.phone ? `\n${booking.phone}` : ""}${booking.guestEmail ? `\n${booking.guestEmail}` : ""}`);
       td(row, booking.source);
+      td(row, paymentLabels[booking.paymentMethod] || paymentLabels[booking.paymentProvider] || "Not recorded");
       td(row, Number(booking.amountInr) > 0 ? `₹${Number(booking.amountInr).toLocaleString("en-IN")}${booking.amountUsd ? ` / $${Number(booking.amountUsd).toFixed(2)}` : ""}` : "—");
       pill(row, booking.status);
       const cell = document.createElement("td");
@@ -135,8 +137,8 @@
   $("manual-form").addEventListener("submit", async (event) => {
     event.preventDefault(); status("manual-status", "Recording the reservation…");
     try {
-      const data = await api("/api/admin-bookings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "manual-booking", source: $("source").value, stayType: $("manual-type").value, checkIn: $("manual-in").value, checkOut: $("manual-out").value, quantity: Number($("manual-quantity").value), guestCount: Number($("manual-guests").value), guestName: $("manual-name").value, phone: $("manual-phone").value, note: $("manual-note").value }) });
-      status("manual-status", `Saved as ${data.reference}; those dates now count against website availability.`); $("from-date").value = $("manual-in").value; $("to-date").value = $("manual-out").value; await load();
+      const data = await api("/api/admin-bookings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "manual-booking", source: $("source").value, paymentMethod: $("manual-payment-mode").value, stayType: $("manual-type").value, checkIn: $("manual-in").value, checkOut: $("manual-out").value, quantity: Number($("manual-quantity").value), guestCount: Number($("manual-guests").value), guestName: $("manual-name").value, phone: $("manual-phone").value, note: $("manual-note").value }) });
+      status("manual-status", `Saved as ${data.reference}; payment mode: ${paymentLabels[data.paymentMethod]}. Those dates now count against website availability.`); $("from-date").value = $("manual-in").value; $("to-date").value = $("manual-out").value; await load();
     } catch (error) { status("manual-status", error.message, true); }
   });
 

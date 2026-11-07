@@ -2,6 +2,9 @@
   "crons": [
     { "path": "/api/google/auto-reply", "schedule": "0 3 * * *" }
   ],
+  "redirects": [
+    { "source": "/admin-payments.html", "destination": "/staff.html", "permanent": false }
+  ],
   "rewrites": [
     {
       "source": "/.well-known/mcp/server-card.json",

@@ -1,9 +1,9 @@
 const crypto = require("node:crypto");
-const { availabilityForDay, availabilityForDays, DEFAULT_CAPACITY, ensureSchema, getPool, isoDays } = require("../lib/booking-store");
+const { availabilityForDay, availabilityForDays, DEFAULT_CAPACITY, MAX_CAPACITY, ensureSchema, getPool, isoDays } = require("../lib/booking-store");
 const { getAdminKey, signQuote } = require("../lib/paypal");
 const { getUsdInrRate, toUsd } = require("../lib/fx");
 
-const TYPES = new Set(Object.keys(DEFAULT_CAPACITY));
+const TYPES = new Set(Object.keys(MAX_CAPACITY));
 const SOURCES = new Set(["offline", "booking.com", "makemytrip", "goibibo", "hostelworld", "other"]);
 
 function dates(req) {
@@ -56,7 +56,7 @@ module.exports = async function handler(req, res) {
       const stayType = String(body.stayType || "");
       const capacity = Number(body.capacity);
       const blocked = Number(body.blocked || 0);
-      if (!dayList.length || !TYPES.has(stayType) || !Number.isInteger(capacity) || capacity < 0 || capacity > DEFAULT_CAPACITY[stayType] || !Number.isInteger(blocked) || blocked < 0 || blocked > capacity) {
+      if (!dayList.length || !TYPES.has(stayType) || !Number.isInteger(capacity) || capacity < 0 || capacity > MAX_CAPACITY[stayType] || !Number.isInteger(blocked) || blocked < 0 || blocked > capacity) {
         return res.status(400).json({ error: "Check the date range, room type, capacity and blocked count." });
       }
       const client = await db.connect();
@@ -83,7 +83,7 @@ module.exports = async function handler(req, res) {
       const guestCount = Number(body.guestCount || quantity);
       const source = String(body.source || "other");
       const guestLimit = { hall: 4, fourBed: 4, eightBed: 8, cooler: 2, ac: 3, twoBhk: 8 }[stayType];
-      if (!TYPES.has(stayType) || !dayList.length || !Number.isInteger(quantity) || quantity < 1 || quantity > DEFAULT_CAPACITY[stayType] || !Number.isInteger(guestCount) || guestCount < 1 || guestCount > guestLimit || (['hall','fourBed','eightBed'].includes(stayType) && guestCount > quantity) || (['cooler','ac','twoBhk'].includes(stayType) && quantity !== 1) || !SOURCES.has(source)) {
+      if (!TYPES.has(stayType) || !dayList.length || !Number.isInteger(quantity) || quantity < 1 || quantity > MAX_CAPACITY[stayType] || !Number.isInteger(guestCount) || guestCount < 1 || guestCount > guestLimit || (['hall','fourBed','eightBed'].includes(stayType) && guestCount > quantity) || (['cooler','ac','twoBhk'].includes(stayType) && quantity !== 1) || !SOURCES.has(source)) {
         return res.status(400).json({ error: "Check the dates, accommodation, guest count and booking source." });
       }
       const bookingId = crypto.randomUUID();

@@ -3,6 +3,7 @@
   const KEY_NAME = "awara_staff_key";
   const labels = { hall: "Hall Dormitory", fourBed: "4-Bed Dormitory", eightBed: "8-Bed Mixed Dormitory", cooler: "1BHK Cooler Room", ac: "1BHK AC Room", twoBhk: "2BHK Entire Room" };
   const caps = { hall: 4, fourBed: 4, eightBed: 8, cooler: 1, ac: 1, twoBhk: 1 };
+  const defaultCaps = { hall: 2, fourBed: 2, eightBed: 4, cooler: 1, ac: 1, twoBhk: 1 };
   let staffKey = sessionStorage.getItem(KEY_NAME) || "";
   let bookings = [];
   let loading = false;
@@ -24,7 +25,7 @@
     $("from-date").value = today; $("to-date").value = addDays(today, 30);
     $("inventory-from").value = today; $("inventory-to").value = addDays(today, 1);
     $("manual-in").value = today; $("manual-out").value = addDays(today, 1);
-    $("capacity").value = caps[$("inventory-type").value];
+      $("capacity").value = defaultCaps[$("inventory-type").value];
   }
   async function load() {
     if (!staffKey || loading) return;
@@ -113,7 +114,7 @@
     } catch (error) { status("main-status", error.message, true); }
   }
   function signOut() { staffKey = ""; sessionStorage.removeItem(KEY_NAME); $("desk").classList.add("hidden"); $("signed-label").classList.add("hidden"); $("signin").classList.remove("hidden"); $("staff-key").value = ""; }
-  $("inventory-type").addEventListener("change", () => { $("capacity").max = caps[$("inventory-type").value]; $("blocked").max = caps[$("inventory-type").value]; $("capacity").value = caps[$("inventory-type").value]; $("blocked").value = 0; });
+  $("inventory-type").addEventListener("change", () => { $("capacity").max = caps[$("inventory-type").value]; $("blocked").max = caps[$("inventory-type").value]; $("capacity").value = defaultCaps[$("inventory-type").value]; $("blocked").value = 0; });
   $("login-form").addEventListener("submit", async (event) => {
     event.preventDefault(); staffKey = $("staff-key").value;
     try {

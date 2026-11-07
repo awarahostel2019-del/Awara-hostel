@@ -86,6 +86,16 @@ module.exports = async function handler(req, res) {
       if (!bookingConfirmed) {
         return res.status(202).json({ status: "COMPLETED", reference: quote.reference, amount: quote.amount, currency: quote.currency, captureId, bookingConfirmed: false, message: "Payment was received, but the booking needs staff review. Contact Awara with this reference." });
       }
+      const existingReceipt = await database.query("SELECT 1 FROM awara_payments WHERE provider_reference=$1", [captureId]);
+      if (!existingReceipt.rowCount) {
+        const sequence = await database.query("SELECT nextval('awara_receipt_sequence')::text AS value");
+        const receiptNumber = `AWR-${new Date().getFullYear()}-${String(sequence.rows[0].value).padStart(6, "0")}`;
+        await database.query(
+          `INSERT INTO awara_payments(booking_id,receipt_number,amount_inr,method,kind,provider_reference,note)
+           VALUES($1::uuid,$2,$3,'paypal','full',$4,'PayPal payment verified online') ON CONFLICT(provider_reference) DO NOTHING`,
+          [quote.bookingId, receiptNumber, Number(quote.amountInr), captureId],
+        );
+      }
     }
     return res.status(200).json({ status: "COMPLETED", reference: quote.reference, amount: quote.amount, currency: quote.currency, captureId, bookingConfirmed });
   } catch (error) {

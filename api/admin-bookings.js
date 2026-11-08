@@ -96,13 +96,24 @@ module.exports = async function handler(req, res) {
       const client = await db.connect();
       try {
         await client.query("BEGIN");
-        const found = await client.query("SELECT id, amount_inr, status FROM awara_bookings WHERE reference=$1 FOR UPDATE", [reference]);
+        const found = await client.query("SELECT id, amount_inr, status, payer_country, expires_at FROM awara_bookings WHERE reference=$1 FOR UPDATE", [reference]);
         const booking = found.rows[0];
         if (!booking || booking.status === "cancelled") { await client.query("ROLLBACK"); return res.status(404).json({ error: "Booking not found or cancelled." }); }
         const receipt = await insertPayment(client, { bookingId: booking.id, totalAmount: Number(booking.amount_inr), amountPaid: amount, method, note: body.note });
-        await client.query("UPDATE awara_bookings SET payment_method=$2, updated_at=now() WHERE id=$1::uuid", [booking.id, method]);
+        const totals = await client.query("SELECT COALESCE(SUM(amount_inr),0)::numeric AS paid FROM awara_payments WHERE booking_id=$1::uuid", [booking.id]);
+        const paidTotal = Number(totals.rows[0].paid);
+        const minimumAdvance = Math.ceil(Number(booking.amount_inr) * 0.25);
+        const canConfirm = booking.status === "awaiting_staff" && booking.payer_country === "IN" && booking.expires_at && new Date(booking.expires_at).getTime() > Date.now() && paidTotal >= minimumAdvance;
+        await client.query(
+          `UPDATE awara_bookings SET payment_method=$2,
+             status=CASE WHEN $3::boolean THEN 'confirmed' ELSE status END,
+             payment_provider=CASE WHEN $3::boolean THEN 'manual' ELSE payment_provider END,
+             expires_at=CASE WHEN $3::boolean THEN NULL ELSE expires_at END,
+             updated_at=now() WHERE id=$1::uuid`,
+          [booking.id, method, Boolean(canConfirm)],
+        );
         await client.query("COMMIT");
-        return res.status(201).json({ receipt, reference });
+        return res.status(201).json({ receipt, reference, status: canConfirm ? "confirmed" : booking.status, paidTotal, minimumAdvance, balanceDue: Math.max(0, Number(booking.amount_inr) - paidTotal) });
       } catch (error) { await client.query("ROLLBACK").catch(() => {}); if (error.publicStatus) return res.status(error.publicStatus).json({ error: error.message }); throw error; }
       finally { client.release(); }
     }
@@ -198,6 +209,13 @@ module.exports = async function handler(req, res) {
           await client.query("ROLLBACK");
           return res.status(409).json({ error: "This request is no longer awaiting manual confirmation." });
         }
+        const payments = await client.query("SELECT COALESCE(SUM(amount_inr),0)::numeric AS paid FROM awara_payments WHERE booking_id=$1::uuid", [booking.id]);
+        const paidTotal = Number(payments.rows[0].paid);
+        const minimumAdvance = Math.ceil(Number(booking.amountInr || 0) * 0.25);
+        if (!minimumAdvance || paidTotal < minimumAdvance) {
+          await client.query("ROLLBACK");
+          return res.status(409).json({ error: `Record and verify at least ₹${minimumAdvance.toLocaleString("en-IN")} before confirming this booking.` });
+        }
         const dayList = isoDays(booking.checkIn, booking.checkOut);
         for (const day of dayList) await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", [`${day}:${["cooler","ac","twoBhk"].includes(booking.stayType) ? "private_rooms" : booking.stayType}`]);
         for (const day of dayList) {
@@ -237,9 +255,8 @@ module.exports = async function handler(req, res) {
             WHERE id=$1::uuid AND status='awaiting_staff' RETURNING reference`, [booking.id],
         );
         if (!updated.rowCount) throw Object.assign(new Error("This request changed. Refresh and try again."), { publicStatus: 409 });
-        const receipt = await insertPayment(client, { bookingId: booking.id, totalAmount: Number(booking.amountInr || 0), amountPaid: Number(booking.amountInr || 0), method: "other", note: "Manual payment verified by staff" });
         await client.query("COMMIT");
-        return res.status(200).json({ reference, status: "confirmed", receipt });
+        return res.status(200).json({ reference, status: "confirmed", paidTotal, minimumAdvance, balanceDue: Math.max(0, Number(booking.amountInr || 0) - paidTotal) });
       } catch (error) {
         await client.query("ROLLBACK").catch(() => {});
         if (error.publicStatus) return res.status(error.publicStatus).json({ error: error.message });

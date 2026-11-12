@@ -8,4 +8,4 @@ Disallow: /api/admin-bookings
 Disallow: /api/bookings
 Disallow: /api/inventory
 Content-Signal: search=yes, ai-train=no
-Sitemap: https://awarahostels.com/sitemap.xml
+Sitemap: https://www.awarahostels.com/sitemap.xml
